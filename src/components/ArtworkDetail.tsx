@@ -8,9 +8,9 @@ import Link from 'next/link'
 
 export function ArtworkDetail({artwork}: {artwork: any}) {
   const imgs: any[] = artwork?.images || []
-  const primary = imgs[0]
 
   const [open, setOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -24,9 +24,30 @@ export function ArtworkDetail({artwork}: {artwork: any}) {
     return `Enquiry: ${title}${year}`
   }, [artwork?.title, artwork?.year])
 
+  const availability = useMemo(() => {
+    const value = artwork?.availability
+    if (value === 'available') {
+      return {
+        label: 'Available',
+        className: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+      }
+    }
+    if (value === 'sold') {
+      return {
+        label: 'Sold',
+        className: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
+      }
+    }
+    return null
+  }, [artwork?.availability])
+
   function closeModal() {
     setOpen(false)
     setError(null)
+  }
+
+  function closeLightbox() {
+    setLightboxIndex(null)
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -89,24 +110,49 @@ export function ArtworkDetail({artwork}: {artwork: any}) {
       </div>
 
       <header className="mb-10">
-        <h1 className="text-4xl font-semibold tracking-tight">{artwork?.title}</h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-4xl font-semibold tracking-tight">{artwork?.title}</h1>
+          {availability ? (
+            <span
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${availability.className}`}
+            >
+              {availability.label}
+            </span>
+          ) : null}
+        </div>
         <div className="mt-3 text-sm text-neutral-500">
           {[artwork?.year, artwork?.medium, artwork?.dimensions].filter(Boolean).join(' · ')}
         </div>
       </header>
 
-      {/* Primary image */}
-      {primary ? (
-        <div className="overflow-hidden rounded-2xl">
-          <Image
-            src={urlFor(primary).width(2200).quality(85).url()}
-            alt={artwork?.title || ''}
-            width={2200}
-            height={1600}
-            className="h-auto w-full"
-            priority
-          />
-        </div>
+      {/* Image carousel */}
+      {imgs.length ? (
+        <section className="mt-6">
+          <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {imgs.map((img, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setLightboxIndex(idx)}
+                className="group relative w-full shrink-0 snap-center overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/40"
+                aria-label={`Open image ${idx + 1} of ${imgs.length}`}
+              >
+                <Image
+                  src={urlFor(img).width(2200).quality(85).url()}
+                  alt={artwork?.title || ''}
+                  width={2200}
+                  height={1600}
+                  className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"
+                  priority={idx === 0}
+                  sizes="(min-width: 1024px) 960px, 90vw"
+                />
+              </button>
+            ))}
+          </div>
+          {imgs.length > 1 ? (
+            <p className="mt-2 text-xs text-neutral-500">Swipe or drag to see more images.</p>
+          ) : null}
+        </section>
       ) : null}
 
       {/* Optional description */}
@@ -118,21 +164,39 @@ export function ArtworkDetail({artwork}: {artwork: any}) {
         </div>
       ) : null}
 
-      {/* Additional images */}
-      {imgs.length > 1 ? (
-        <section className="mt-16 space-y-10">
-          {imgs.slice(1).map((img, idx) => (
-            <div key={idx} className="overflow-hidden rounded-2xl">
-              <Image
-                src={urlFor(img).width(2200).quality(85).url()}
-                alt=""
-                width={2200}
-                height={1600}
-                className="h-auto w-full"
-              />
-            </div>
-          ))}
-        </section>
+      {/* Lightbox */}
+      {lightboxIndex !== null && imgs[lightboxIndex] ? (
+        <div
+          className="fixed inset-0 z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Artwork image"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/80"
+            onClick={closeLightbox}
+            aria-label="Close image"
+          />
+          <div className="relative mx-auto flex h-full max-w-5xl items-center justify-center px-4 py-10">
+            <Image
+              src={urlFor(imgs[lightboxIndex]).width(2400).quality(90).url()}
+              alt={artwork?.title || ''}
+              width={2400}
+              height={1800}
+              className="h-auto w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl"
+              sizes="(min-width: 1024px) 960px, 90vw"
+            />
+            <button
+              type="button"
+              onClick={closeLightbox}
+              className="absolute right-6 top-6 rounded-full bg-white/90 p-2 text-neutral-700 shadow hover:bg-white"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {/* Modal */}
