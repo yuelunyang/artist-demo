@@ -11,8 +11,6 @@ export function ArtworkDetail({artwork}: {artwork: any}) {
 
   const [open, setOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
-  const carouselRef = useRef<HTMLDivElement | null>(null)
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -50,24 +48,6 @@ export function ArtworkDetail({artwork}: {artwork: any}) {
 
   function closeLightbox() {
     setLightboxIndex(null)
-  }
-
-  function handleCarouselScroll() {
-    if (!carouselRef.current) return
-    const {scrollLeft, clientWidth} = carouselRef.current
-    const nextIndex = Math.round(scrollLeft / clientWidth)
-    if (nextIndex !== activeIndex) {
-      setActiveIndex(nextIndex)
-    }
-  }
-
-  function goToImage(index: number) {
-    if (!carouselRef.current) return
-    carouselRef.current.scrollTo({
-      left: carouselRef.current.clientWidth * index,
-      behavior: 'smooth',
-    })
-    setActiveIndex(index)
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -148,48 +128,30 @@ export function ArtworkDetail({artwork}: {artwork: any}) {
       {/* Image carousel */}
       {imgs.length ? (
         <section className="mt-6">
-          <div className="mx-auto max-w-3xl">
-            <div
-              ref={carouselRef}
-              onScroll={handleCarouselScroll}
-              className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            >
-              {imgs.map((img, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setLightboxIndex(idx)}
-                  className="group relative w-full shrink-0 snap-center overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/40"
-                  aria-label={`Open image ${idx + 1} of ${imgs.length}`}
-                >
-                  <Image
-                    src={urlFor(img).width(2200).quality(85).url()}
-                    alt={artwork?.title || ''}
-                    width={2200}
-                    height={1600}
-                    className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"
-                    priority={idx === 0}
-                    sizes="(min-width: 1024px) 768px, 90vw"
-                  />
-                </button>
-              ))}
-            </div>
-            {imgs.length > 1 ? (
-              <div className="mt-4 flex items-center justify-center gap-2">
-                {imgs.map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => goToImage(idx)}
-                    className={`h-2 w-2 rounded-full transition ${
-                      idx === activeIndex ? 'bg-neutral-900' : 'bg-neutral-300'
-                    }`}
-                    aria-label={`Go to image ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            ) : null}
+          <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {imgs.map((img, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setLightboxIndex(idx)}
+                className="group relative w-full shrink-0 snap-center overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/40"
+                aria-label={`Open image ${idx + 1} of ${imgs.length}`}
+              >
+                <Image
+                  src={urlFor(img).width(2200).quality(85).url()}
+                  alt={artwork?.title || ''}
+                  width={2200}
+                  height={1600}
+                  className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"
+                  priority={idx === 0}
+                  sizes="(min-width: 1024px) 960px, 90vw"
+                />
+              </button>
+            ))}
           </div>
+          {imgs.length > 1 ? (
+            <p className="mt-2 text-xs text-neutral-500">Swipe or drag to see more images.</p>
+          ) : null}
         </section>
       ) : null}
 
