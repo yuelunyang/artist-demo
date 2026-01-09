@@ -1,6 +1,6 @@
 'use client'
 
-import {useMemo, useState} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import Image from 'next/image'
 import {PortableText} from '@portabletext/react'
 import {urlFor} from '@/lib/sanity.image'
