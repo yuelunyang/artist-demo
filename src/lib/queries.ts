@@ -48,6 +48,7 @@ export const artworkBySlugQuery = /* groq */ `
   dimensions,
   description,
   images,
+  availability,
   "slug": slug.current
 }
 `
